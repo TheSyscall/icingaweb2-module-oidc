@@ -11,7 +11,6 @@ use Icinga\Application\Logger;
 use Icinga\Authentication\Auth;
 use Icinga\Exception\Http\HttpException;
 use Icinga\Module\Oidc\Common\Database;
-use Icinga\Module\Oidc\LoginFormModifierHelper;
 use Icinga\Module\Oidc\Model\Group;
 use Icinga\Module\Oidc\Model\GroupMembership;
 use Icinga\Module\Oidc\Model\Provider;
@@ -30,19 +29,16 @@ class AuthenticationController extends \Icinga\Controllers\AuthenticationControl
     /**
      * Log into the application
      */
-    public function loginAction()
+    public function loginAction(): void
     {
-        $this->view->addHelperPath(
-            Icinga::app()->getBaseDir()
-            . DIRECTORY_SEPARATOR . "application/views/helpers/"
-        );
-        $this->view->addScriptPath(
-            Icinga::app()->getBaseDir()
-            . DIRECTORY_SEPARATOR . "application/views/scripts/"
-        );
+        // Experimental relogin: auto-redirect to the OIDC provider when the internalurl cookie is set
+        if (Config::module('oidc')->get('experimental', 'relogin', '0') === '1') {
+            $url = (string) Icinga::app()->getRequest()->getUrl();
+            if (strpos($url, 'oidc-logout') === false && ! empty($_COOKIE['oidc-internalurl'])) {
+                Icinga::app()->getRequest()->getResponse()->redirectAndExit($_COOKIE['oidc-internalurl']);
+            }
+        }
         parent::loginAction();
-        LoginFormModifierHelper::init();
-        $this->view->form = $this->view->form . "\n" . LoginFormModifierHelper::renderAfterForm();
     }
 
     public function realmAction()
@@ -321,21 +317,19 @@ class AuthenticationController extends \Icinga\Controllers\AuthenticationControl
         });
     }
 
-    public function failedAction()
+    public function failedAction(): void
     {
         $this->loginAction();
-        $div = Html::tag('div', ['class' => 'icinga-module module-oidc']);
-        $html = Html::tag('p', ['class' => 'oidc-error'], "OIDC: Something went wrong!");
-        $div->add($html);
-        $this->view->form = $this->view->form . $div;
-        $this->_helper->viewRenderer->setRender('authentication/login', null, true);
+        $this->addContent(Html::tag(
+            'div',
+            ['class' => 'icinga-module module-oidc'],
+            Html::tag('p', ['class' => 'oidc-error'], 'OIDC: Something went wrong!')
+        ));
     }
 
-    public function oidcLogoutAction()
+    public function oidcLogoutAction(): void
     {
-        // This workarround will not trigger the relogin
-        $this->_helper->viewRenderer->setRender('authentication/login', null, true);
-        $this->loginAction();
+        $this->redirectNow('authentication/login');
     }
 
 }
