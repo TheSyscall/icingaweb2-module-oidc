@@ -11,7 +11,6 @@ $this->providePermission(
     $this->translate('Allow modifying providers')
 );
 
-
 $this->providePermission(
     'oidc/filelist',
     'Allow the user to list files'
@@ -22,7 +21,7 @@ $this->providePermission(
 );
 $this->providePermission(
     'oidc/fileview',
-   'Allow viewing files'
+    'Allow viewing files'
 );
 $this->providePermission(
     'oidc/filedelete',
@@ -56,7 +55,6 @@ $this->providePermission(
     $this->translate('Allow to configure the module')
 );
 
-
 $this->providePermission(
     'oidc/import',
     $this->translate('Allow to use import functionality')
@@ -68,25 +66,18 @@ $section = $this->menuSection(N_('Oidc'), [
     'priority' => 910
 ]);
 
-
-?>
-
-<?php
-
-$this->provideConfigTab('backend', array(
+$this->provideConfigTab('backend', [
     'title' => $this->translate('Configure the database backend'),
     'label' => $this->translate('Backend'),
     'url' => 'config/backend'
-));
+]);
 
-$this->provideConfigTab('importbackend', array(
+$this->provideConfigTab('importbackend', [
     'title' => $this->translate('Configure the database backend'),
     'label' => $this->translate('Import Backend'),
     'url' => 'config/import-backend'
-));
+]);
 
-?>
-<?php
 $section->add(N_('Provider'))
     ->setUrl('oidc/providers')
     ->setPermission('oidc/provider')
@@ -107,29 +98,20 @@ $section->add(N_('User'))
     ->setPermission('oidc/user')
     ->setPriority(20);
 
-
 $section->add(N_('Group'))
     ->setUrl('oidc/groups')
     ->setPermission('oidc/group')
     ->setPriority(30);
-?>
-
-<?php
 
 $section->add(N_('Files'))
     ->setUrl('oidc/file')
     ->setPermission('oidc/file')
     ->setPriority(30);
 
-if(count($this->getConfig('userbackends')->keys()) > 0){
+if (count($this->getConfig('userbackends')->keys()) > 0) {
     $section->add(N_('Import'))
         ->setUrl('oidc/import/list')
         ->setPermission('oidc/import')
         ->setPriority(40);
 }
 
-
-$this->provideUserBackend('oidc',\Icinga\Module\Oidc\Backend\OidcUserBackend::class);
-$this->provideUserGroupBackend('oidc',\Icinga\Module\Oidc\Backend\OidcUserGroupBackend::class);
-
-?>
